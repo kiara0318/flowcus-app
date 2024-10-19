@@ -1,0 +1,21 @@
+.emoji-button {
+    border-radius: 8px;
+    padding: 8px;
+    width: 48px;
+    height: 48px;
+}
+
+.emoji-button:hover {
+    background-color: var(--h);
+}
+
+.emoji-picker {
+    position: absolute;
+    z-index: 1;
+}
+
+.emoji-picker-wrapper {
+    display: inline-block;
+    position: relative;
+}
+

@@ -1,0 +1,22 @@
+.dashboard-overlay {
+    height: 100%;
+    background-color: var(--primary-pink); /* Primary color */
+    opacity: 0.3;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1; /* Ensure background stays behind other content */
+}
+
+.dashboard-content {
+    position: relative;
+    z-index: 2; /* Ensure this content is on top of the background */
+    display: flex;
+    flex-direction: column; /* Stack content vertically */
+    align-items: flex-start; /* Align items to the left */
+    padding: 16px; /* Space from the edges */
+    overflow-y: auto; /* Allow vertical scrolling if content exceeds viewport height */
+    height: 100%; /* Ensure it fills the available height */
+}

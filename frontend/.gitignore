@@ -1,0 +1,33 @@
+# Operating System Files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDE and Editor Files
+.vscode/
+.idea/
+
+# Dependency Directories
+/node_modules
+
+# Production Directories
+/build
+/dist
+
+# Testing Directories
+/coverage
+/logs
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*storybook.log
+
+# Environment Variable Files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

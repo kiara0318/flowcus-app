@@ -1,0 +1,12 @@
+.app-bar {
+    background-color: var(--primary-pink); /* Or any color that fits your theme */
+}
+
+.logo {
+    height: 40px;
+    margin-right: 16px;
+}
+
+.icon-button {
+    color: var(--lighter-pink); /* Color for the AccountCircle icon */
+}

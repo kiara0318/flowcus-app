@@ -1,0 +1,1 @@
+export {convertUnifiedToEmoji} from "./EmojiUtils";
