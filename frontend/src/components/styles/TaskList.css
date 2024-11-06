@@ -1,0 +1,62 @@
+.task-list-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.task-appbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.task-appbar .MuiTypography-h6 {
+    color: var(--lighter-pink);
+    text-shadow: 0 1px 1px var(--shadow-dark);
+}
+
+.task-appbar .toolbar {
+    display: flex;
+    justify-content: space-between;
+}
+
+.toolbar-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.toolbar-buttons svg {
+    color: var(--lighter-pink);
+    filter: drop-shadow(0 1px 1px var(--shadow-dark));
+}
+
+.task-list-content {
+    overflow-y: auto;
+    padding: 16px;
+    box-sizing: border-box;
+}
+
+.task-list-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--pink-white);
+    text-align: center;
+}
+
+.task-list-empty .empty-icon {
+    font-size: 60px;
+    color: var(--primary-pink);
+}
+
+.task-list-empty .empty-message {
+    font-size: 1.25rem;
+    margin-top: 16px;
+    color: var(--primary-pink);
+}
+
+.task-list-empty .empty-subtext {
+    font-style: italic;
+    color: var(--light-pink);
+}

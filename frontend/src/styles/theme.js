@@ -7,6 +7,9 @@ const theme = createTheme({
         primary: {
             main: "#fb48a7", // Customize primary color
         },
+        secondary: {
+            main: "#5f6eff", // Customize primary color
+        },
     },
 
     typography: {

@@ -1,58 +1,91 @@
-import React from "react";
-import {Box, CircularProgress, Typography} from "@mui/material";
-import {PrimaryAppBar} from "../components";
-import useDailyQuote from "../hooks/useDailyQuote";
-import QuoteCard from "../components/QuoteCard";
-import "./Dashboard.css"; // Import the CSS file for styling
+import React, {useEffect, useState} from "react";
+import {useDailyQuote} from "../utils/hooks";
+import "./Dashboard.css";
+import {ErrorMessage, LoadingIndicator, Marquee, PrimaryAppBar, QuoteDisplay, TaskList} from "../components";
+import {Box} from "@mui/material";
 
 /**
- * Dashboard component that displays the Quote of the Day.
- * Uses a custom hook to fetch quotes and displays them in stylized cards.
+ * Dashboard component that displays the daily quote, a task list, and a marquee showing the currently playing track.
+ * Manages track transitions and fade animations for the marquee.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered Dashboard component.
  */
 const Dashboard = () => {
-    const {dailyQuote, loading, error} = useDailyQuote(); // Use the updated custom hook
+    const {dailyQuote, loading: quoteLoading, error} = useDailyQuote();
+    const [currentTrack, setCurrentTrack] = useState(null);
+    const [fadeOut, setFadeOut] = useState(false);
+    const [fadeIn, setFadeIn] = useState(false);
 
     /**
-     * Renders the content based on the loading and error states.
-     * @returns {JSX.Element} The content to be displayed in the dashboard.
+     * Renders the content for the daily quote section.
+     * Displays a loading indicator, error message, or the quote itself based on the state.
+     *
+     * @returns {JSX.Element} The content to render for the daily quote section.
      */
     const renderContent = () => {
-        if (loading) {
-            return <CircularProgress color="inherit"/>; // Show loading spinner while fetching data
+        if (quoteLoading) {
+            return <LoadingIndicator/>;
         }
-
         if (error) {
-            return (
-                <Typography variant="h6" color="error">
-                    {error.message || "An error occurred while fetching the quote."}
-                </Typography>
-            ); // Display error message if fetching fails
+            return <ErrorMessage message={error.message}/>;
         }
-
-        // Check if dailyQuote is available
-        if (!dailyQuote) {
-            return <Typography variant="h6">No quote available.</Typography>; // Fallback message
-        }
-
-        // Destructure quote and author directly from dailyQuote
-        const {author, quote} = dailyQuote;
-
-        return (
-            <QuoteCard
-                quote={quote || "Quote not found."} // Fallback for missing quote
-                author={author || "Unknown"} // Fallback for missing author
-            />
+        return dailyQuote ? (
+            <QuoteDisplay dailyQuote={dailyQuote}/>
+        ) : (
+            <ErrorMessage message="No quote available."/>
         );
     };
 
+    /**
+     * Effect hook that triggers when `currentTrack` changes.
+     * Manages the fade-in and fade-out animations for the marquee.
+     */
+    useEffect(() => {
+        if (currentTrack) {
+            setTimeout(() => setFadeIn(true), 100); // Delays the fade-in effect slightly
+            setFadeOut(false);
+        }
+    }, [currentTrack]);
+
+    /**
+     * Handles the end of the marquee animation.
+     * Resets the `currentTrack` and fade states when the fade-out animation completes.
+     */
+    const handleMarqueeAnimationEnd = () => {
+        if (fadeOut) {
+            setCurrentTrack(null);
+            setFadeOut(false);
+            setFadeIn(false);
+        }
+    };
+
     return (
-        <Box sx={{height: "100vh", position: "relative", overflow: "hidden"}}>
-            <Box className="dashboard-overlay"/>
+        <Box className="dashboard-container">
             <PrimaryAppBar/>
+            <Box className="quote-container">{renderContent()}</Box>
             <Box className="dashboard-content">
-                {renderContent()} {/* Render Quotes */}
-                {/*<WebPlayback/>*/}
+                <Box className="left-side">
+                    <div className="dashboard-task-container">
+                        <TaskList
+                            setCurrentPlayingTrack={setCurrentTrack}
+                            fadeOut={fadeOut}
+                            setFadeIn={setFadeIn}
+                            setFadeOut={setFadeOut}
+                        />
+                    </div>
+                </Box>
+                <Box className="right-side">
+                    {/* Additional components can be added here if needed */}
+                </Box>
             </Box>
+            {currentTrack && (
+                <Marquee
+                    text={`Now Playing: ${currentTrack.name} by ${currentTrack.artistsDisplayName}`}
+                    onAnimationEnd={handleMarqueeAnimationEnd}
+                    className={`marquee ${fadeIn ? "fade-in" : ""} ${fadeOut ? "fade-out" : ""}`}
+                />
+            )}
         </Box>
     );
 };

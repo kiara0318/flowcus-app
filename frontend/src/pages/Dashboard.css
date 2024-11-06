@@ -1,22 +1,45 @@
-.dashboard-overlay {
-    height: 100%;
-    background-color: var(--primary-pink); /* Primary color */
-    opacity: 0.3;
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 1; /* Ensure background stays behind other content */
+.dashboard-container {
+    height: 100vh; /* Full viewport height */
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; /* Allow scrolling in the main container */
 }
 
 .dashboard-content {
-    position: relative;
-    z-index: 2; /* Ensure this content is on top of the background */
     display: flex;
-    flex-direction: column; /* Stack content vertically */
-    align-items: flex-start; /* Align items to the left */
-    padding: 16px; /* Space from the edges */
-    overflow-y: auto; /* Allow vertical scrolling if content exceeds viewport height */
-    height: 100%; /* Ensure it fills the available height */
+    flex: 1; /* Take the full height of container */
+    overflow-y: hidden; /* Prevent scroll on main content */
+}
+
+.left-side, .right-side {
+    width: 50%;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    overflow-y: hidden; /* Let TrackSelector handle its own scroll */
+}
+
+.quote-container {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 16px;
+    border-radius: 8px;
+}
+
+.dashboard-task-container {
+    display: flex; /* Flexbox for tasks */
+    flex-direction: column; /* Stack tasks vertically */
+    width: 100%; /* Full width */
+    box-sizing: border-box; /* Include padding in width */
+    overflow-y: auto; /* Scrollable if tasks overflow */
+    max-height: calc(100vh - 260px); /* Max height adjustment for proper spacing */
+}
+
+.loading-spinner {
+    margin: auto; /* Center spinner */
+}
+
+.error-message {
+    text-align: center; /* Center text */
 }

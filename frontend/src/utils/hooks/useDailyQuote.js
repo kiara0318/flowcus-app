@@ -2,13 +2,16 @@ import {useEffect, useState} from "react";
 import axios from "axios";
 
 /**
- * Custom hook to fetch and manage the "Quote of the Day" data from an API.
- * Fetches the quote data once on mount and returns the quote, loading, and error states.
+ * useDailyQuote custom hook fetches and manages the "Quote of the Day" data from an API.
+ *
+ * It fetches the quote data once on mount and returns the quote, loading state, and any error encountered.
  *
  * @returns {Object} An object containing:
- * - `dailyQuote` ({quote: string, author: string} | null): The quote and author, or null if not fetched.
- * - `loading` (boolean): Whether the quote is currently being fetched.
- * - `error` (string | null): Error message if fetching fails, or null if there is no error.
+ * - {Object | null} dailyQuote - The daily quote and author, or null if not fetched.
+ *   - {string} dailyQuote.quote - The quote text.
+ *   - {string} dailyQuote.author - The author of the quote.
+ * - {boolean} loading - Indicates whether the quote is currently being fetched.
+ * - {string | null} error - Error message if fetching fails, or null if there is no error.
  */
 const useDailyQuote = () => {
     const [dailyQuote, setDailyQuote] = useState(null);
@@ -20,7 +23,7 @@ const useDailyQuote = () => {
             setLoading(true);
             setError(null); // Reset error state on new fetch
             try {
-                const response = await axios.get("http://localhost:3000/api/today");
+                const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/today`);
 
                 // Check for expected data format
                 const {quote, author} = response.data;

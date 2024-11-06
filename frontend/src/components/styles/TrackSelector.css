@@ -1,0 +1,105 @@
+.track-selector {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.track-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--primary-pink);
+    position: relative;
+}
+
+.search-input {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.search-input .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+    border-color: var(--primary-pink);
+}
+
+.track-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid var(--pink-white);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.track-item:hover {
+    background-color: var(--light-pink);
+}
+
+.track-image {
+    margin-right: 10px;
+    border-radius: 5px;
+}
+
+.track-info {
+    flex-grow: 1;
+}
+
+.track-name {
+    font-weight: bold;
+}
+
+.track-artists {
+    font-size: 14px;
+    color: #666;
+}
+
+.clear-button {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #666;
+}
+
+.selected-track {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: var(--light-pink);
+    position: relative;
+}
+
+.selected-track .track-image {
+    margin-right: 10px;
+    border-radius: 5px;
+}
+
+.selected-track .track-info {
+    flex: 1;
+}
+
+.selected-track .clear-button {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #666;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.loading-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+}

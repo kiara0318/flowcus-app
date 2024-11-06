@@ -18,11 +18,16 @@ export const Long = Template.bind({});
 Long.args = {
     quote: "This is a quote ........................................................................................." +
         "............................................................................................................" +
-        ".................................",
+        "............................................................................................................",
     author: "Me"
 };
 
 export const UnknownAuthor = Template.bind({});
 UnknownAuthor.args = {
     quote: "This quote has an unknown author",
+};
+
+export const UndefinedAuthor = Template.bind({});
+UndefinedAuthor.args = {
+    quote: "This quote has an undefined author", author: undefined
 };

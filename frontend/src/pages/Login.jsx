@@ -3,7 +3,7 @@ import React from "react";
 const Login = () => {
     const handleLoginWithSpotify = () => {
         // Redirect to backend login route
-        window.location.href = "http://localhost:3000/login"; // Your backend will handle the redirection
+        window.location.href = `${process.env.REACT_APP_API_URL}/login`; // Your backend will handle the redirection
     };
 
     return (

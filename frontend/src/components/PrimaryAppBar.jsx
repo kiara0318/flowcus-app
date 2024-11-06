@@ -2,26 +2,23 @@ import React from "react";
 import PropTypes from "prop-types";
 import {AppBar, Box, IconButton, Menu, MenuItem, Toolbar} from "@mui/material";
 import {AccountCircle} from "@mui/icons-material";
-import logo from "./images/logo-no-bg.png";
+import logo from "./images/logos/flowcus-bubble.png";
 import "./styles/PrimaryAppBar.css";
 
 /**
- * PrimaryAppBar Component
+ * PrimaryAppBar component serves as the main navigation bar for the application.
  *
- * A component representing the primary application toolbar.
- * Includes a logo image on the left and a profile button that triggers a menu with profile options.
- *
- * @param {Object} props - The props for the component.
- * @param {Function} [props.onViewProfile] - Optional. Function to call when the "View Profile" menu item is clicked.
- * @param {Function} [props.onOpenSettings] - Optional. Function to call when the "Settings" menu item is clicked.
- * @param {Function} [props.onLogout] - Optional. Function to call when the "Logout" menu item is clicked.
- *
- * @returns {JSX.Element} The rendered PrimaryAppBar component.
+ * @param {Object} props - Component properties.
+ * @param {Function} [props.onViewProfile] - Callback function triggered when the "View Profile" menu item is clicked.
+ * @param {Function} [props.onOpenSettings] - Callback function triggered when the "Settings" menu item is clicked.
+ * @param {Function} [props.onLogout] - Callback function triggered when the "Logout" menu item is clicked.
+ * @returns {JSX.Element} Rendered PrimaryAppBar component.
  */
 const PrimaryAppBar = ({onViewProfile, onOpenSettings, onLogout}) => {
     const [anchorEl, setAnchorEl] = React.useState(null);
 
     const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
+
     const handleMenuClose = () => setAnchorEl(null);
 
     const handleMenuItemClick = (callback) => {
@@ -47,7 +44,6 @@ const PrimaryAppBar = ({onViewProfile, onOpenSettings, onLogout}) => {
     );
 };
 
-// PropTypes validation
 PrimaryAppBar.propTypes = {
     onViewProfile: PropTypes.func,
     onOpenSettings: PropTypes.func,

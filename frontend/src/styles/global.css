@@ -6,6 +6,8 @@
     --accent-yellow: #ffeb3b;
     --shadow-dark: rgba(0, 0, 0, 0.5);
     --hover-blue: #99caff;
+    --selected: #c8cdff;
+    --spotify-green: #1DB954;
 
     /* Font Family */
     --font-family: 'Fredoka One', sans-serif; /* Add the font-family variable */
@@ -15,6 +17,11 @@
 h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-family); /* Apply font to headings */
 }
+
+body {
+    background-color: var(--lighter-pink);
+}
+
 
 /* Add any other global styles you need here */
 

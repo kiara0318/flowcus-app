@@ -6,9 +6,9 @@
  *
  * @example
  * // Returns the grinning face emoji
- * const emoji = convertUnifiedToEmoji('1F600');
+ * const emoji = unifiedCodeToEmoji('1F600');
  */
-export const convertUnifiedToEmoji = (unifiedCode) => {
+export const unifiedCodeToEmoji = (unifiedCode) => {
     if (!unifiedCode || typeof unifiedCode !== "string") {
         return ""; // Return an empty string if the input is invalid
     }
@@ -24,7 +24,7 @@ export const convertUnifiedToEmoji = (unifiedCode) => {
 };
 
 /**
- * Converts an emoji object to its corresponding emoji character.
+ * Extracts the emoji character from an emoji object or converts its unified code to the emoji character.
  *
  * The function checks for an existing emoji property in the emoji object. If not found,
  * it attempts to convert the unified code property (if available) to an emoji character.
@@ -36,13 +36,13 @@ export const convertUnifiedToEmoji = (unifiedCode) => {
  *
  * @example
  * // Returns the grinning face emoji
- * const emoji = convertEmojiObjectToEmoji({ unified: '1F600' });
+ * const emoji = emojiObjectToEmoji({ unified: '1F600' });
  */
-export const convertEmojiObjectToEmoji = (emojiObject) => {
+export const emojiObjectToEmoji = (emojiObject) => {
     if (!emojiObject || typeof emojiObject !== "object") {
         return ""; // Return an empty string if the input is invalid
     }
 
     // Return emoji if present, otherwise convert unified code to emoji
-    return emojiObject.emoji ?? convertUnifiedToEmoji(emojiObject.unified) ?? "";
+    return emojiObject.emoji || unifiedCodeToEmoji(emojiObject.unified) || "";
 };

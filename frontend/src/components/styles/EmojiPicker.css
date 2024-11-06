@@ -1,21 +1,31 @@
-.emoji-button {
-    border-radius: 8px;
+.emoji-picker-wrapper .emoji-button {
+    border-radius: 12px;
     padding: 8px;
     width: 48px;
     height: 48px;
+    background-color: white !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border: 1px solid transparent;
+    cursor: pointer;
 }
 
 .emoji-button:hover {
-    background-color: var(--h);
+    background-color: var(--hover-blue);
 }
 
 .emoji-picker {
     position: absolute;
     z-index: 1;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .emoji-picker-wrapper {
-    display: inline-block;
+    display: flex;
+    justify-content: center;
     position: relative;
+    margin: 0 auto;
 }
-

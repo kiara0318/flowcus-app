@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Flowcus",
+  "name": "Flowcus - Find Your Rhythm",
   "icons": [
     {
       "src": "favicon.ico",
@@ -20,6 +20,8 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#1a1a1a",
+  "background_color": "#f0f0f0",
+  "description": "Flowcus syncs your tasks with music for an effortless flow in productivity.",
+  "orientation": "portrait"
 }

@@ -1,34 +1,37 @@
-// TaskCard.stories.jsx
-
-import React from "react";
+import React, {useState} from "react";
 import {TaskCard} from "../components";
-import {convertUnifiedToEmoji} from "../utils";
 
 export default {
-    title: "Components/TaskCard", component: TaskCard, argTypes: {
-        emoji: {control: "text"}, name: {control: "text"}
-    },
+    title: "Components/TaskCard",
+    component: TaskCard,
 };
 
-const Template = (args) => <TaskCard {...args} />;
+const Template = (args) => {
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [isCompleted, setIsCompleted] = useState(false);
+
+    const handlePlayClick = () => {
+        if (isPlaying) {
+            setIsPlaying(false);
+            setIsCompleted(true);
+        } else {
+            setIsPlaying(true);
+        }
+    };
+
+    return (
+        <TaskCard
+            {...args}
+            isPlaying={isPlaying}
+            isCompleted={isCompleted}
+            onPlay={handlePlayClick}
+        />
+    );
+};
 
 export const Default = Template.bind({});
 Default.args = {
-    name: "Complete one item on task list"
+    emoji: "📝",
+    name: "Sample Task",
+    isDisabled: false,
 };
-
-export const UrgentTask = Template.bind({});
-UrgentTask.args = {
-    emoji: "⚠️", name: "Pay Rent"
-};
-
-export const CasualTask = Template.bind({});
-CasualTask.args = {
-    emoji: "☕", name: "Take a coffee break"
-};
-
-export const UnicodeToToothbrushEmoji = Template.bind({});
-UnicodeToToothbrushEmoji.args = {
-    emoji: convertUnifiedToEmoji("1faa5"), name: "Brush your teeth"
-};
-

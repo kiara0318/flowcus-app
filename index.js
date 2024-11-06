@@ -82,14 +82,54 @@ app.get("/callback", async (req, res) => {
             }
         );
 
-        const {access_token} = response.data;
-        console.log("Access token retrieved:", access_token);
+        const {access_token, refresh_token} = response.data;
+        console.log("Access token retrieved");
 
         // Redirect to frontend callback with access token
-        res.redirect(`${redirectUriFrontend}?access_token=${access_token}`);
+        res.redirect(`${redirectUriFrontend}?access_token=${access_token}&refresh_token=${refresh_token}`);
     } catch (error) {
         console.error("Error fetching Spotify tokens:", error.response ? error.response.data : error.message);
         return res.status(500).send("Authentication failed");
+    }
+});
+
+app.post("/refresh_token", async (req, res) => {
+    const {refreshToken} = req.body;
+
+    if (!refreshToken) {
+        return res.status(400).json({error: "Refresh token is required"});
+    }
+
+    try {
+        console.log("Attempting to refresh token with:", refreshToken); // Log the refresh token
+
+        const response = await axios.post("https://accounts.spotify.com/api/token", null, {
+            params: {
+                grant_type: "refresh_token",
+                refresh_token: refreshToken,
+                client_id: spotifyClientId,
+                client_secret: spotifyClientSecret,
+            },
+        });
+
+        const {access_token} = response.data;
+        console.log("Access token refreshed:", access_token); // Log the new access token
+
+        res.json({accessToken: access_token});
+    } catch (error) {
+        console.error("Error refreshing access token:", error.response ? error.response.data : error.message);
+        if (error.response && error.response.data) {
+            // Handle specific error messages
+            if (error.response.data.error === "invalid_grant") {
+                return res.status(400).json({
+                    error: "Invalid refresh token. Please re-authenticate."
+                });
+            }
+        }
+        res.status(500).json({
+            error: "Failed to refresh access token",
+            details: error.response ? error.response.data : error.message
+        });
     }
 });
 
@@ -100,15 +140,16 @@ app.get("/callback", async (req, res) => {
  * @route GET /api/today
  * @async
  */
-// Example: Resetting lastFetchDate to allow fetching quote every time
 let lastFetchDate = null; // Variable to store the last fetch date
+let dailyQuote = null; // Cache for the daily quote
 
 app.get("/api/today", async (req, res) => {
-    let dailyQuote = null;
     const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
 
-    // This logic allows fetching the quote even if it was fetched today
-    lastFetchDate = null; // Reset for testing or remove this line for normal operation
+    // Check if the quote has already been fetched today
+    if (lastFetchDate === today && dailyQuote) {
+        return res.json(dailyQuote); // Return cached quote
+    }
 
     try {
         // Fetch today's quote from the external API
@@ -122,6 +163,7 @@ app.get("/api/today", async (req, res) => {
                 author: quoteData[0].a,
             };
             lastFetchDate = today; // Update the last fetch date
+            return res.json(dailyQuote); // Send the daily quote as a response
         } else {
             return res.status(404).json({error: "No quote found"});
         }
@@ -129,8 +171,6 @@ app.get("/api/today", async (req, res) => {
         console.error("Error fetching quote:", error);
         return res.status(500).json({error: "Failed to fetch quote"});
     }
-
-    res.json(dailyQuote); // Send the daily quote as a response
 });
 
 // Start the server

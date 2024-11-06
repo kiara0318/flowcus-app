@@ -1,5 +1,5 @@
 .app-bar {
-    background-color: var(--primary-pink); /* Or any color that fits your theme */
+    background-color: var(--primary-pink);
 }
 
 .logo {
@@ -8,5 +8,10 @@
 }
 
 .icon-button {
-    color: var(--lighter-pink); /* Color for the AccountCircle icon */
+    color: var(--lighter-pink);
+}
+
+img {
+    filter: drop-shadow(1px 1px 2px var(--shadow-dark));
+    max-height: 32px;
 }
