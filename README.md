@@ -121,5 +121,3 @@ To run Flowcus locally, you’ll need the following:
 
 This project is **All Rights Reserved**. You may view the project, but you may not copy, modify, distribute, or use it
 in any way without explicit permission from the author.
-
-```
