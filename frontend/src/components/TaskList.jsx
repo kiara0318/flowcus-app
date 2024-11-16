@@ -1,6 +1,6 @@
-import React, {useEffect, useState} from "react";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import PropTypes from "prop-types";
-import {AppBar, Box, Toolbar, Typography} from "@mui/material";
+import {AppBar, Box, debounce, Toolbar, Typography} from "@mui/material";
 import "./styles/TaskList.css";
 import {CreateTaskModal, SnackbarMessage, TaskCard} from "./index";
 import {useSnackbar} from "../utils/hooks";
@@ -10,10 +10,13 @@ import {v4 as uuidv4} from "uuid";
 import {formatArtists} from "../utils";
 
 /**
- * AppBar component for the Task List.
- * @param {Object} props
- * @param {Function} props.onCreateTask - Function to handle task creation.
- * @returns {JSX.Element} The rendered AppBar component.
+ * TaskAppBar component renders the top navigation bar for the task management interface.
+ * It includes the application title and a button to create new tasks within a modal.
+ *
+ * @component
+ * @param {Object} props - The component props
+ * @param {Function} props.onCreateTask - Callback function to handle the creation of a new task.
+ * @returns {JSX.Element} The rendered component.
  */
 const TaskAppBar = ({onCreateTask}) => (
     <AppBar position="sticky" className="task-appbar">
@@ -28,22 +31,20 @@ const TaskAppBar = ({onCreateTask}) => (
     </AppBar>
 );
 
-TaskAppBar.propTypes = {
-    onCreateTask: PropTypes.func.isRequired,
-};
-
 /**
- * TaskCardList component that renders a list of task cards.
- * @param {Object} props
- * @param {Array} props.tasks - Array of task objects to display.
- * @param {Function} props.onCompleteTask - Function to mark a task as complete.
- * @param {string} [props.currentPlayingTaskId] - ID of the currently playing task.
- * @param {Function} props.onStartTask - Function to start a task.
- * @param {number} props.remainingDuration - Remaining duration of the currently playing track.
- * @param {Function} props.setRemainingDuration - Function to update the remaining duration.
- * @param {Function} props.setCurrentPlayingTrack - Function to set the current playing track.
- * @param {Function} props.setFadeOut - Function to set the fade-out state.
- * @returns {JSX.Element} The rendered TaskCardList component.
+ * TaskCardList component renders a list of tasks and manages playback, completion,
+ * and task tracking functionality with integration to Spotify.
+ *
+ * @param {Object} props - Component properties
+ * @param {Array} props.tasks - List of task objects to display
+ * @param {Function} props.onCompleteTask - Callback function to mark a task as complete
+ * @param {String|null} props.currentPlayingTaskId - ID of the currently playing task, if any
+ * @param {Function} props.onStartTask - Callback function to start a task
+ * @param {Number} props.remainingDuration - Remaining duration of the current task in milliseconds
+ * @param {Function} props.setRemainingDuration - Setter for remaining duration
+ * @param {Function} props.setCurrentPlayingTrack - Setter for the currently playing track
+ * @param {Function} props.setFadeOut - Setter for the fade-out effect
+ * @param {Set<String>} props.completedTaskIds - Set of IDs for completed tasks
  */
 export const TaskCardList = ({
                                  tasks,
@@ -54,85 +55,146 @@ export const TaskCardList = ({
                                  setRemainingDuration,
                                  setCurrentPlayingTrack,
                                  setFadeOut,
+                                 completedTaskIds, // Include completedTaskIds to filter out completed tasks
                              }) => {
     const {snackbarOpen, snackbarMessage, showSnackbar, setSnackbarOpen} = useSnackbar();
-    const {playTrack, pauseTrack, trackEventEmitter} = useSpotifyPlayer();
+    const {playTrack, pauseTrack, trackEventEmitter, isSpotifyReady, isPaused} = useSpotifyPlayer();
+    const [processingEvent, setProcessingEvent] = useState(false);
+
+    const tasksRef = useRef(tasks);
+    const listenersAttachedRef = useRef(false);
+    const currentPlayingTaskIdRef = useRef(null);
+    const currentPlayingTrackRef = useRef(null);
 
     /**
-     * Handles task actions (starting or completing a task).
-     * @param {Object} task - The task object for the action.
-     * @returns {Promise<void>}
+     * Switches the currently playing task and handles pausing the previous task if necessary.
+     *
+     * @param {Object} task - The task to start playing
+     * @returns {Promise<void>} - Resolves once the task playback starts
      */
-    const handleTaskAction = async (task) => {
-        if (task.isCompleted) return;
+    const switchTask = async (task) => {
+        if (currentPlayingTaskIdRef.current !== task.id) {
+            // If there's an active task and it's not paused, pause it
+            if (currentPlayingTaskIdRef.current && !isPaused) {
+                pauseTrack();
+                showSnackbar(`Task paused: "${tasksRef.current.find((t) => t.id === currentPlayingTaskIdRef.current)?.taskName}"`);
+                await new Promise((resolve) => {
+                    const checkPaused = () => {
+                        if (isPaused) resolve();
+                    };
+                    checkPaused(); // Check immediately if paused
+                    trackEventEmitter.once("trackEnded", checkPaused);
+                });
+            }
 
-        if (currentPlayingTaskId === task.id) {
-            pauseTrack();
-            const completedTaskName = tasks.find(t => t.id === currentPlayingTaskId).taskName;
-            onCompleteTask(currentPlayingTaskId);
-            showSnackbar(`Task completed: "${completedTaskName}"`);
-            setFadeOut(true);
-        }
-
-        if (currentPlayingTaskId !== task.id) {
+            // Play the new task
             await playTrack(task.track.uri);
             onStartTask(task.id);
+            currentPlayingTaskIdRef.current = task.id;
             showSnackbar(`Task started: "${task.taskName}"`);
         }
     };
 
-    useEffect(() => {
-        const handleTrackEnded = () => {
-            if (currentPlayingTaskId) {
-                const completedTask = tasks.find(task => task.id === currentPlayingTaskId);
-                if (completedTask) {
-                    pauseTrack();
-                    onCompleteTask(currentPlayingTaskId);
-                    showSnackbar(`Task completed: "${completedTask.taskName}"`);
-                    setFadeOut(true);
-                }
-            }
-        };
+    /**
+     * Handles the task action, either pausing and completing the current task, or switching to a new task.
+     *
+     * @param {Object} task - The task to handle
+     * @returns {Promise<void>} - Resolves once the action is complete
+     */
+    const handleTaskAction = useCallback(
+        async (task) => {
+            // If task is completed or already marked as completed, do nothing
+            if (task.isCompleted || completedTaskIds.has(task.id)) return;
 
-        const handleTrackStarted = () => {
-            if (currentPlayingTaskId) {
-                const startedTask = tasks.find(task => task.id === currentPlayingTaskId);
-                if (startedTask) {
+            // Handle task playback or completion
+            if (currentPlayingTaskIdRef.current === task.id) {
+                pauseTrack();
+                onCompleteTask(task.id);
+                showSnackbar(`Task paused: "${task.taskName}"`);
+                setFadeOut(true);
+            } else {
+                await switchTask(task);
+            }
+        },
+        [completedTaskIds, currentPlayingTaskIdRef, pauseTrack, showSnackbar, setFadeOut, onCompleteTask]
+    );
+
+    /**
+     * Handles the event when a track starts, updating the UI with the current track and its remaining duration.
+     */
+    const handleTrackStarted = useCallback(
+        debounce(() => {
+            if (processingEvent) return;
+            setProcessingEvent(true);
+
+            const startedTask = tasksRef.current.find((task) => task.id === currentPlayingTaskIdRef.current);
+
+            if (startedTask && !completedTaskIds.has(startedTask.id)) {
+                if (currentPlayingTrackRef.current !== startedTask.track.uri) {
+                    currentPlayingTrackRef.current = startedTask.track.uri;
                     setCurrentPlayingTrack(startedTask.track);
                     setRemainingDuration(startedTask.track.duration_ms);
                 }
             }
+
+            setProcessingEvent(false);
+        }, 300),
+        [processingEvent, setCurrentPlayingTrack, setRemainingDuration]
+    );
+
+    /**
+     * Handles the event when a track ends, marking the current task as completed and pausing the track.
+     */
+    const handleTrackEnded = useCallback(
+        debounce(() => {
+            const completedTask = tasksRef.current.find(
+                (task) => task.id === currentPlayingTaskIdRef.current
+            );
+
+            if (completedTask && !completedTaskIds.has(completedTask.id)) {
+                pauseTrack();
+                onCompleteTask(currentPlayingTaskIdRef.current);
+                showSnackbar(`Task completed: "${completedTask.taskName}"`);
+                setFadeOut(true);
+
+                // Clear currentPlayingTaskIdRef to avoid playback issues
+                currentPlayingTaskIdRef.current = null;
+            }
+        }, 300),
+        [onCompleteTask, showSnackbar, setFadeOut, pauseTrack]
+    );
+
+    useEffect(() => {
+        const removeEventListeners = () => {
+            if (trackEventEmitter && listenersAttachedRef.current) {
+                trackEventEmitter.off("trackEnded", handleTrackEnded);
+                trackEventEmitter.off("trackStarted", handleTrackStarted);
+                listenersAttachedRef.current = false;
+            }
         };
 
-        trackEventEmitter.on("trackEnded", handleTrackEnded);
-        trackEventEmitter.on("trackStarted", handleTrackStarted);
+        if (isSpotifyReady && trackEventEmitter && !listenersAttachedRef.current) {
+            trackEventEmitter.on("trackEnded", handleTrackEnded);
+            trackEventEmitter.on("trackStarted", handleTrackStarted);
+            listenersAttachedRef.current = true;
+        }
 
-        return () => {
-            trackEventEmitter.off("trackEnded", handleTrackEnded);
-            trackEventEmitter.off("trackStarted", handleTrackStarted);
-        };
-    }, [currentPlayingTaskId, onCompleteTask, showSnackbar, tasks, trackEventEmitter]);
+        return () => removeEventListeners();
+    }, [isSpotifyReady, trackEventEmitter, handleTrackStarted, handleTrackEnded]);
+
+    useEffect(() => {
+        tasksRef.current = tasks;
+    }, [tasks]);
 
     useEffect(() => {
         let countdownInterval;
-        let fadeOutTimer;
-
-        if (remainingDuration > 0 && currentPlayingTaskId) {
+        if (remainingDuration > 0 && currentPlayingTaskIdRef.current) {
             countdownInterval = setInterval(() => {
-                setRemainingDuration(prevDuration => Math.max(prevDuration - 1000, 0));
+                setRemainingDuration((prevDuration) => Math.max(prevDuration - 1000, 0));
             }, 1000);
-
-            const fadeOutTime = remainingDuration > 2000 ? remainingDuration - 2000 : remainingDuration / 2;
-            fadeOutTimer = setTimeout(() => {
-                setFadeOut(true);
-            }, fadeOutTime);
         }
-
-        return () => {
-            clearInterval(countdownInterval);
-            clearTimeout(fadeOutTimer);
-        };
-    }, [remainingDuration, currentPlayingTaskId, setRemainingDuration, setFadeOut]);
+        return () => clearInterval(countdownInterval);
+    }, [remainingDuration]);
 
     return (
         <Box className="task-list-content">
@@ -152,7 +214,7 @@ export const TaskCardList = ({
                         isPlaying={currentPlayingTaskId === task.id && !task.isCompleted}
                         isCompleted={task.isCompleted}
                         remainingDuration={currentPlayingTaskId === task.id ? remainingDuration : null}
-                        isDisabled={currentPlayingTaskId && currentPlayingTaskId !== task.id}
+                        isDisabled={task.isCompleted || (currentPlayingTaskId && currentPlayingTaskId !== task.id)}
                     />
                 ))
             )}
@@ -175,7 +237,7 @@ TaskCardList.propTypes = {
                 image: PropTypes.string.isRequired,
             }).isRequired,
             isCompleted: PropTypes.bool.isRequired,
-        }).isRequired,
+        }).isRequired
     ).isRequired,
     onCompleteTask: PropTypes.func.isRequired,
     currentPlayingTaskId: PropTypes.string,
@@ -184,37 +246,40 @@ TaskCardList.propTypes = {
     setRemainingDuration: PropTypes.func.isRequired,
     setCurrentPlayingTrack: PropTypes.func.isRequired,
     setFadeOut: PropTypes.func.isRequired,
+    completedTaskIds: PropTypes.instanceOf(Set).isRequired,
 };
 
 /**
- * Main TaskList component that manages tasks and their states.
+ * TaskList Component
  *
- * @param {Object} props - The props for the TaskList component.
- * @param {Function} props.setCurrentPlayingTrack - Function to set the current playing track.
- * @param {Function} props.setFadeOut - Function to set the fade-out state.
- * @param {Array} [props.tasks] - Optional array of tasks to initialize the task list. Defaults to an empty array if not provided.
+ * Manages a list of tasks, supporting task creation, completion, and playback functionality.
+ * Tasks are sorted to prioritize the currently playing task, followed by incomplete and completed tasks.
  *
- * @returns {JSX.Element} The rendered TaskList component.
+ * @param {Object} props - Component properties
+ * @param {function} props.setCurrentPlayingTrack - Callback to set the currently playing track
+ * @param {function} props.setFadeOut - Callback to trigger fade-out effect when a task is completed
+ * @param {Array} [props.tasks=[]] - Initial list of tasks to display
+ * @returns {JSX.Element} Rendered TaskList component
  */
 const TaskList = ({
                       setCurrentPlayingTrack,
                       setFadeOut,
-                      tasks: initialTasks = []
+                      tasks: initialTasks = [],
                   }) => {
     const [tasks, setTasks] = useState(initialTasks);
     const [currentPlayingTaskId, setCurrentPlayingTaskId] = useState(null);
-    const [completedTaskIds, setCompletedTaskIds] = useState([]);
+    const [completedTaskIds, setCompletedTaskIds] = useState(new Set());
     const [remainingDuration, setRemainingDuration] = useState(0);
 
     useEffect(() => {
         const completedTasks = initialTasks.filter((task) => task.isCompleted);
-        const completedTaskIds = completedTasks.map((task) => task.id);
-        setCompletedTaskIds(completedTaskIds);  // Set initial state for completed tasks
+        setCompletedTaskIds(new Set(completedTasks.map((task) => task.id)));
     }, []);
 
     /**
-     * Marks a task as complete.
-     * @param {string} taskId - The ID of the task to be marked as completed.
+     * Marks a task as completed.
+     *
+     * @param {string} taskId - ID of the task to mark as completed
      */
     const handleCompleteTask = (taskId) => {
         setTasks((prevTasks) =>
@@ -223,13 +288,14 @@ const TaskList = ({
             )
         );
         setCurrentPlayingTaskId((current) => (current === taskId ? null : current));
-        setCompletedTaskIds((prevCompletedIds) => [...prevCompletedIds, taskId]);
+        setCompletedTaskIds((prevCompletedIds) => new Set(prevCompletedIds).add(taskId));
         setRemainingDuration(0);
     };
 
     /**
-     * Starts a task.
-     * @param {string} taskId - The ID of the task to be started.
+     * Starts a task by setting it as the currently playing task.
+     *
+     * @param {string} taskId - ID of the task to start
      */
     const handleStartTask = (taskId) => {
         setCurrentPlayingTaskId(taskId);
@@ -237,14 +303,15 @@ const TaskList = ({
 
     /**
      * Creates a new task and adds it to the task list.
-     * @param {string} taskName - The name of the task.
-     * @param {Object} emoji - The emoji object for the task.
-     * @param {Object} track - The track object associated with the task.
+     *
+     * @param {string} taskName - Name of the task
+     * @param {Object} emoji - Emoji associated with the task
+     * @param {Object} track - Track information for the task
      */
     const handleCreateTask = (taskName, emoji, track) => {
         const newTask = {
             id: uuidv4(),
-            taskName: taskName,
+            taskName,
             emoji: emoji.emoji,
             track: {
                 name: track.name,
@@ -259,7 +326,7 @@ const TaskList = ({
     };
 
     const incompleteTasks = tasks.filter((task) => !task.isCompleted);
-    const completedTasks = completedTaskIds
+    const completedTasks = Array.from(completedTaskIds)
         .map((taskId) => tasks.find((task) => task.id === taskId))
         .filter((task) => task);
 
@@ -272,7 +339,9 @@ const TaskList = ({
 
     return (
         <Box className="task-list-container">
+            {/* TaskAppBar component for creating new tasks */}
             <TaskAppBar onCreateTask={handleCreateTask}/>
+            {/* TaskCardList displays sorted tasks and handles task actions */}
             <TaskCardList
                 tasks={sortedTasks}
                 onCompleteTask={handleCompleteTask}
@@ -282,6 +351,7 @@ const TaskList = ({
                 setRemainingDuration={setRemainingDuration}
                 setCurrentPlayingTrack={setCurrentPlayingTrack}
                 setFadeOut={setFadeOut}
+                completedTaskIds={completedTaskIds}
             />
         </Box>
     );

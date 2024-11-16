@@ -54,9 +54,9 @@ const Dashboard = () => {
      */
     const handleMarqueeAnimationEnd = () => {
         if (fadeOut) {
-            setCurrentTrack(null);
             setFadeOut(false);
             setFadeIn(false);
+            setCurrentTrack(null);
         }
     };
 
@@ -68,6 +68,7 @@ const Dashboard = () => {
                 <Box className="left-side">
                     <div className="dashboard-task-container">
                         <TaskList
+                            currentPlayingTrack={currentTrack}
                             setCurrentPlayingTrack={setCurrentTrack}
                             fadeOut={fadeOut}
                             setFadeIn={setFadeIn}

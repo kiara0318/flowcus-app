@@ -13,6 +13,7 @@ export const SpotifyPlayerProvider = ({children}) => {
     const [player, setPlayer] = useState(null);
     const [deviceId, setDeviceId] = useState(null);
     const playerInitialized = useRef(false);
+    const [isPaused, setIsPaused] = useState(false);
 
     useEffect(() => {
         const initializePlayer = async () => {
@@ -62,6 +63,9 @@ export const SpotifyPlayerProvider = ({children}) => {
                         } else if (track_window.previous_tracks.length > 0) {
                             trackEventEmitter.emit("trackEnded", track_window.current_track);
                         }
+
+                        // Track paused state to use for task switching
+                        setIsPaused(paused);
                     }
                 });
 
@@ -139,7 +143,8 @@ export const SpotifyPlayerProvider = ({children}) => {
     };
 
     return (
-        <SpotifyPlayerContext.Provider value={{player, playTrack, pauseTrack, trackEventEmitter}}>
+        <SpotifyPlayerContext.Provider
+            value={{player, playTrack, pauseTrack, trackEventEmitter, isSpotifyReady: !!deviceId, isPaused}}>
             {children}
         </SpotifyPlayerContext.Provider>
     );
