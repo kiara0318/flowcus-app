@@ -1,8 +1,8 @@
-import React from "react"; // Add this line at the top of your file
+import React from "react";
 /** @type { import("@storybook/react").Preview } */
 import "../src/styles/global.css";
-import {ThemeProvider} from "@mui/material/styles"; // Adjust based on your theme provider
-import theme from "../src/styles/theme"; // Adjust the path to your MUI theme
+import {ThemeProvider} from "@mui/material/styles";
+import theme from "../src/styles/theme";
 
 
 const preview = {

@@ -45,16 +45,16 @@ TaskAppBar.propTypes = {
  * @param {Function} props.setFadeOut - Function to set the fade-out state.
  * @returns {JSX.Element} The rendered TaskCardList component.
  */
-const TaskCardList = ({
-                          tasks,
-                          onCompleteTask,
-                          currentPlayingTaskId,
-                          onStartTask,
-                          remainingDuration,
-                          setRemainingDuration,
-                          setCurrentPlayingTrack,
-                          setFadeOut,
-                      }) => {
+export const TaskCardList = ({
+                                 tasks,
+                                 onCompleteTask,
+                                 currentPlayingTaskId,
+                                 onStartTask,
+                                 remainingDuration,
+                                 setRemainingDuration,
+                                 setCurrentPlayingTrack,
+                                 setFadeOut,
+                             }) => {
     const {snackbarOpen, snackbarMessage, showSnackbar, setSnackbarOpen} = useSnackbar();
     const {playTrack, pauseTrack, trackEventEmitter} = useSpotifyPlayer();
 
@@ -188,16 +188,29 @@ TaskCardList.propTypes = {
 
 /**
  * Main TaskList component that manages tasks and their states.
+ *
  * @param {Object} props - The props for the TaskList component.
  * @param {Function} props.setCurrentPlayingTrack - Function to set the current playing track.
  * @param {Function} props.setFadeOut - Function to set the fade-out state.
+ * @param {Array} [props.tasks] - Optional array of tasks to initialize the task list. Defaults to an empty array if not provided.
+ *
  * @returns {JSX.Element} The rendered TaskList component.
  */
-const TaskList = ({setCurrentPlayingTrack, setFadeOut}) => {
-    const [tasks, setTasks] = useState([]);
+const TaskList = ({
+                      setCurrentPlayingTrack,
+                      setFadeOut,
+                      tasks: initialTasks = []
+                  }) => {
+    const [tasks, setTasks] = useState(initialTasks);
     const [currentPlayingTaskId, setCurrentPlayingTaskId] = useState(null);
     const [completedTaskIds, setCompletedTaskIds] = useState([]);
     const [remainingDuration, setRemainingDuration] = useState(0);
+
+    useEffect(() => {
+        const completedTasks = initialTasks.filter((task) => task.isCompleted);
+        const completedTaskIds = completedTasks.map((task) => task.id);
+        setCompletedTaskIds(completedTaskIds);  // Set initial state for completed tasks
+    }, []);
 
     /**
      * Marks a task as complete.
@@ -277,6 +290,7 @@ const TaskList = ({setCurrentPlayingTrack, setFadeOut}) => {
 TaskList.propTypes = {
     setCurrentPlayingTrack: PropTypes.func.isRequired,
     setFadeOut: PropTypes.func.isRequired,
+    tasks: PropTypes.array,
 };
 
 export default TaskList;

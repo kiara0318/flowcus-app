@@ -1,8 +1,12 @@
 {
   "name": "routine-reminder-app",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "backend/server.js",
   "scripts": {
+    "start": "concurrently \"npm run start-backend\" \"npm run start-frontend\"",
+    "start-backend": "node backend/server.js",
+    "start-frontend": "cd frontend && npm start",
+    "install-frontend": "cd frontend && npm install",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -28,9 +32,10 @@
     "@eslint/js": "^9.12.0",
     "@testing-library/jest-dom": "^6.5.0",
     "@testing-library/react": "^16.0.1",
-    "eslint": "^9.12.0",
+    "concurrently": "^9.1.0",
+    "eslint": "^8.57.1",
     "eslint-plugin-react": "^7.37.1",
-    "eslint-plugin-storybook": "^0.9.0",
+    "eslint-plugin-storybook": "^0.11.0",
     "globals": "^15.11.0"
   }
 }

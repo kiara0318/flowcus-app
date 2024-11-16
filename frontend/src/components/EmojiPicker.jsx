@@ -1,43 +1,44 @@
-import React, {useCallback, useState} from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import PropTypes from "prop-types";
 import Picker from "emoji-picker-react";
 import {Box, ClickAwayListener, IconButton, Tooltip} from "@mui/material";
 import "./styles/EmojiPicker.css";
 
-/**
- * EmojiPicker component allows users to select an emoji and notifies a parent component when an emoji is chosen.
- *
- * @param {Object} props - Component properties.
- * @param {Object} props.defaultEmoji - The default emoji to display.
- * @param {string} [props.initialSkinTone="neutral"] - The initial skin tone for the emoji picker.
- * @param {Function} [props.onEmojiClick] - Callback function triggered when an emoji is clicked.
- * @returns {JSX.Element} Rendered EmojiPicker component.
- */
+// Mapping human-readable skin tone names to codes
+const skinToneMap = {
+    neutral: "neutral",
+    light: "1f3fb",
+    "medium-light": "1f3fc",
+    medium: "1f3fd",
+    "medium-dark": "1f3fe",
+    dark: "1f3ff"
+};
+
 const EmojiPicker = ({
                          defaultEmoji,
                          initialSkinTone = "neutral",
                          onEmojiClick
                      }) => {
     const [selectedEmoji, setSelectedEmoji] = useState(defaultEmoji);
-    const [selectedSkinTone, setSelectedSkinTone] = useState(initialSkinTone);
+    const [selectedSkinTone, setSelectedSkinTone] = useState(skinToneMap[initialSkinTone]);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
-    /**
-     * Handles the event when an emoji is clicked.
-     *
-     * @param {Object} emojiObject - The clicked emoji object.
-     */
+    // Sync selectedSkinTone whenever initialSkinTone changes
+    useEffect(() => {
+        setSelectedSkinTone(skinToneMap[initialSkinTone]);
+    }, [initialSkinTone]);
+
     const handleEmojiClick = useCallback((emojiObject) => {
-        console.log(emojiObject);
         setSelectedEmoji(emojiObject);
         setShowEmojiPicker(false);
         if (onEmojiClick) onEmojiClick(emojiObject);
     }, [onEmojiClick]);
 
-    /**
-     * Toggles the visibility of the emoji picker.
-     */
-    const handleTogglePicker = () => setShowEmojiPicker((prev) => !prev);
+    const handleSkinToneChange = (skinTone) => {
+        setSelectedSkinTone(skinTone);
+    };
+
+    const handleTogglePicker = () => setShowEmojiPicker(prev => !prev);
 
     return (
         <div>
@@ -60,7 +61,7 @@ const EmojiPicker = ({
                             <Picker
                                 onEmojiClick={handleEmojiClick}
                                 defaultSkinTone={selectedSkinTone}
-                                onSkinToneChange={setSelectedSkinTone}
+                                onSkinToneChange={handleSkinToneChange}
                                 previewConfig={{showPreview: false}}
                             />
                         </Box>
@@ -72,7 +73,9 @@ const EmojiPicker = ({
 };
 
 EmojiPicker.propTypes = {
-    initialSkinTone: PropTypes.oneOf(["neutral", "light", "medium-light", "medium", "medium-dark", "dark"]),
+    initialSkinTone: PropTypes.oneOf([
+        "neutral", "light", "medium-light", "medium", "medium-dark", "dark"
+    ]),
     onEmojiClick: PropTypes.func,
     defaultEmoji: PropTypes.object.isRequired
 };
