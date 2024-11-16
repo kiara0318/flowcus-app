@@ -42,8 +42,8 @@ To run Flowcus locally, you’ll need the following:
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/kiaraoliver/flowcus.git
-   cd flowcus
+   git clone https://github.com/kiaraoliver/flowcus-app.git
+   cd flowcus-app
    ```
 
 2. **Install dependencies for both frontend and backend:**
